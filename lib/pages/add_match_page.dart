@@ -9,70 +9,42 @@ class AddMatchPage extends StatefulWidget {
 }
 
 class _AddMatchPageState extends State<AddMatchPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _mapController = TextEditingController();
-  final _killsController = TextEditingController();
-  final _deathsController = TextEditingController();
-  final _scoreController = TextEditingController();
-  bool _isSubmitting = false;
+  final MatchService _matchService = MatchService();
+  final TextEditingController _mapController = TextEditingController();
+  final TextEditingController _scoreController = TextEditingController();
+  final TextEditingController _killsController = TextEditingController();
+  final TextEditingController _deathsController = TextEditingController();
 
-  void _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _isSubmitting = true);
-
-    await MatchService().addMatch({
+  Future<void> _saveMatch() async {
+    await _matchService.addMatch({
       'map': _mapController.text,
-      'kills': int.parse(_killsController.text),
-      'deaths': int.parse(_deathsController.text),
       'score': _scoreController.text,
+      'kills': int.tryParse(_killsController.text) ?? 0,
+      'deaths': int.tryParse(_deathsController.text) ?? 0,
     });
 
-    setState(() => _isSubmitting = false);
-    if (mounted) Navigator.pop(context);
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Añadir Partida')),
+      appBar: AppBar(title: const Text('Agregar partida')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _mapController,
-                decoration: const InputDecoration(labelText: 'Mapa'),
-                validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
-              ),
-              TextFormField(
-                controller: _killsController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Kills'),
-                validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
-              ),
-              TextFormField(
-                controller: _deathsController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Deaths'),
-                validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
-              ),
-              TextFormField(
-                controller: _scoreController,
-                decoration:
-                    const InputDecoration(labelText: 'Resultado (ej: 16-10)'),
-                validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
-                    ? const CircularProgressIndicator()
-                    : const Text('Guardar partida'),
-              ),
-            ],
-          ),
+        child: Column(
+          children: [
+            TextField(controller: _mapController, decoration: const InputDecoration(labelText: 'Mapa')),
+            TextField(controller: _scoreController, decoration: const InputDecoration(labelText: 'Marcador')),
+            TextField(controller: _killsController, decoration: const InputDecoration(labelText: 'Kills'), keyboardType: TextInputType.number),
+            TextField(controller: _deathsController, decoration: const InputDecoration(labelText: 'Deaths'), keyboardType: TextInputType.number),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _saveMatch,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent, foregroundColor: Colors.black),
+              child: const Text('Guardar'),
+            ),
+          ],
         ),
       ),
     );

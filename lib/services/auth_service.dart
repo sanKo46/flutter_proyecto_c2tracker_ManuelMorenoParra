@@ -1,50 +1,39 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Registro de usuario
-  Future<User?> register(String email, String password, String username) async {
+  Future<void> registerUser(String email, String password, String username) async {
     try {
-      final credential = await _auth.createUserWithEmailAndPassword(
+      final cred = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Crear perfil en Firestore
-      await _db.collection('usuarios').doc(credential.user!.uid).set({
+      await _db.collection('usuarios').doc(cred.user!.uid).set({
         'email': email,
         'username': username,
         'role': 'usuario',
         'imageURL': '',
       });
-
-      return credential.user;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Error registrando usuario: [${e.code}] ${e.message}');
     } catch (e) {
-      debugPrint('Error registrando usuario: $e');
-      return null;
+      throw Exception('Error desconocido al registrar: $e');
     }
   }
 
-  // Login
-  Future<User?> login(String email, String password) async {
+  Future<void> loginUser(String email, String password) async {
     try {
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return credential.user;
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Error iniciando sesión: [${e.code}] ${e.message}');
     } catch (e) {
-      debugPrint('Error iniciando sesión: $e');
-      return null;
+      throw Exception('Error desconocido al iniciar sesión: $e');
     }
   }
 
-  // Logout
-  Future<void> logout() async {
-    await _auth.signOut();
-  }
+  Future<void> logoutUser() async => await _auth.signOut();
 }

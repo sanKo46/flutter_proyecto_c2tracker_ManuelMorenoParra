@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'pages/login_page.dart';
 import 'pages/home_page.dart';
 import 'pages/add_match_page.dart';
+import 'pages/stats_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,7 @@ void main() async {
   );
 
   await Firebase.initializeApp(options: firebaseConfig);
+
   runApp(const MyApp());
 }
 
@@ -51,6 +53,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/home': (context) => const HomePage(),
         '/add': (context) => const AddMatchPage(),
+        '/stats': (context) => const StatsPage(),
         '/login': (context) => const LoginPage(),
       },
     );

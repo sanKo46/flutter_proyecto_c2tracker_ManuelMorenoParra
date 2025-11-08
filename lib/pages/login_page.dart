@@ -9,54 +9,57 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _authService = AuthService();
-  bool _isLogin = true;
-  bool _isLoading = false;
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _usernameController = TextEditingController();
+  final AuthService _authService = AuthService();
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+
+  bool isLogin = true;
 
   void _submit() async {
-    setState(() => _isLoading = true);
-    if (_isLogin) {
-      await _authService.login(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-    } else {
-      await _authService.register(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-        _usernameController.text.trim(),
-      );
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final username = _usernameController.text.trim();
+
+    try {
+      if (isLogin) {
+        await _authService.loginUser(email, password);
+      } else {
+        await _authService.registerUser(email, password, username);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     }
-    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Card(
-          margin: const EdgeInsets.all(24),
-          elevation: 8,
-          child: Padding(
-            padding: const EdgeInsets.all(20),
+      backgroundColor: Colors.black,
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
+          child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(_isLogin ? 'Iniciar Sesión' : 'Crear Cuenta',
-                    style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                if (!_isLogin)
+                const Icon(Icons.sports_esports, size: 80, color: Colors.orangeAccent),
+                const SizedBox(height: 20),
+                Text(
+                  isLogin ? 'Inicia Sesión' : 'Crea tu cuenta',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                if (!isLogin)
                   TextField(
                     controller: _usernameController,
-                    decoration: const InputDecoration(labelText: 'Usuario'),
+                    decoration: const InputDecoration(labelText: 'Nombre de usuario'),
                   ),
                 TextField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Correo electrónico'),
                 ),
                 TextField(
                   controller: _passwordController,
@@ -65,14 +68,16 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : Text(_isLogin ? 'Entrar' : 'Registrarse'),
+                  onPressed: _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orangeAccent,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: Text(isLogin ? 'Entrar' : 'Registrarse'),
                 ),
                 TextButton(
-                  onPressed: () => setState(() => _isLogin = !_isLogin),
-                  child: Text(_isLogin
+                  onPressed: () => setState(() => isLogin = !isLogin),
+                  child: Text(isLogin
                       ? '¿No tienes cuenta? Regístrate'
                       : '¿Ya tienes cuenta? Inicia sesión'),
                 ),

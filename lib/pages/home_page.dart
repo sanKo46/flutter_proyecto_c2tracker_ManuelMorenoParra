@@ -1,58 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/match_service.dart';
 import '../services/auth_service.dart';
+import '../services/match_service.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final matchService = MatchService();
-    final authService = AuthService();
+  State<HomePage> createState() => _HomePageState();
+}
 
+class _HomePageState extends State<HomePage> {
+  final AuthService _authService = AuthService();
+  final MatchService _matchService = MatchService();
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mis Partidas'),
+        title: const Text('CS2 Match Tracker'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => Navigator.pushNamed(context, '/add'),
-          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await authService.logout();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
+              await _authService.logoutUser();
             },
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.orangeAccent,
+        onPressed: () => Navigator.pushNamed(context, '/add'),
+        child: const Icon(Icons.add),
+      ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: matchService.getUserMatches(),
+        stream: _matchService.getMatches(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final matches = snapshot.data!.docs;
-          if (matches.isEmpty) {
-            return const Center(child: Text('Aún no hay partidas registradas.'));
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('No hay partidas registradas.'));
           }
+
+          final matches = snapshot.data!.docs;
 
           return ListView.builder(
             itemCount: matches.length,
             itemBuilder: (context, index) {
-              final match = matches[index].data()! as Map<String, dynamic>;
+              final match = matches[index].data() as Map<String, dynamic>;
+
               return Card(
-                margin: const EdgeInsets.all(8),
+                color: Colors.grey[900],
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: ListTile(
+                  leading: const Icon(Icons.sports_esports, color: Colors.orangeAccent),
                   title: Text(match['map'] ?? 'Desconocido'),
                   subtitle: Text(
-                      'Kills: ${match['kills']} - Deaths: ${match['deaths']}'),
-                  trailing: Text(match['score'] ?? ''),
+                    'Score: ${match['score'] ?? 'N/A'} | '
+                    'Kills: ${match['kills'] ?? 0} | '
+                    'Deaths: ${match['deaths'] ?? 0}',
+                  ),
                 ),
               );
             },
