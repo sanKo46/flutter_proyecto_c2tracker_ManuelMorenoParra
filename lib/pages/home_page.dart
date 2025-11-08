@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/auth_service.dart';
 import '../services/match_service.dart';
+import '../widgets/app_drawer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,7 +11,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final AuthService _authService = AuthService();
   final MatchService _matchService = MatchService();
 
   @override
@@ -19,15 +18,8 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('CS2 Match Tracker'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await _authService.logoutUser();
-            },
-          ),
-        ],
       ),
+      drawer: AppDrawer(),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.orangeAccent,
         onPressed: () => Navigator.pushNamed(context, '/add'),
@@ -50,12 +42,12 @@ class _HomePageState extends State<HomePage> {
             itemCount: matches.length,
             itemBuilder: (context, index) {
               final match = matches[index].data() as Map<String, dynamic>;
-
               return Card(
                 color: Colors.grey[900],
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: ListTile(
-                  leading: const Icon(Icons.sports_esports, color: Colors.orangeAccent),
+                  leading: const Icon(Icons.sports_esports,
+                      color: Colors.orangeAccent),
                   title: Text(match['map'] ?? 'Desconocido'),
                   subtitle: Text(
                     'Score: ${match['score'] ?? 'N/A'} | '
