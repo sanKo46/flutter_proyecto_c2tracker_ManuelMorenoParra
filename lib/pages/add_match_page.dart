@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/match_service.dart';
+import '../widgets/app_drawer.dart'; // 👈 Importa el AppDrawer
 
 class AddMatchPage extends StatefulWidget {
   const AddMatchPage({super.key});
@@ -30,6 +31,7 @@ class _AddMatchPageState extends State<AddMatchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Agregar partida')),
+      drawer: AppDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

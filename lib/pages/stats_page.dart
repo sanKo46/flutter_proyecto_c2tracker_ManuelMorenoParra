@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_proyecto_cs2tracker/widgets/app_drawer.dart';
 import '../services/match_service.dart';
 
 class StatsPage extends StatefulWidget {
@@ -20,6 +21,7 @@ class _StatsPageState extends State<StatsPage> {
       appBar: AppBar(
         title: const Text('Estadísticas'),
       ),
+      drawer: AppDrawer(),
       body: StreamBuilder<QuerySnapshot>(
         stream: _matchService.getMatches(),
         builder: (context, snapshot) {
