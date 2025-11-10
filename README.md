@@ -1,38 +1,38 @@
-# 🧠 CS2 Match Tracker 🎯
+# CS2 Match Tracker
 
 Aplicación Flutter para registrar y analizar tus partidas de **Counter-Strike 2 (CS2)**.  
 Permite crear una cuenta, iniciar sesión, añadir partidas con sus estadísticas, ver tus medias y gestionar tu perfil (incluyendo foto de perfil).
 
 ---
 
-## 🚀 Características principales
+## Características principales
 
-✅ Registro e inicio de sesión con **Firebase Authentication**  
-✅ Base de datos en **Firebase Realtime Database**  
-✅ Subida de imagen de perfil con **Firebase Storage**  
-✅ Estadísticas de partidas (kills, deaths, assists, K/D ratio, etc.)  
-✅ Drawer lateral con navegación global  
-✅ Interfaz moderna con **Material 3**  
-✅ Gestión de partidas y estadísticas en tiempo real  
+- Registro e inicio de sesión con **Firebase Authentication**  
+- Base de datos en **Firebase Realtime Database**  
+- Subida de imagen de perfil con **Firebase Storage**  
+- Estadísticas de partidas (kills, deaths, assists, K/D ratio, etc.)  
+- Drawer lateral con navegación global  
+- Interfaz moderna con **Material 3**  
+- Gestión de partidas y estadísticas en tiempo real  
 
 ---
 
-## 🛠️ Instalación y configuración
+## Instalación y configuración
 
-### 1️⃣ Clonar el repositorio
+### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/tuusuario/flutter_proyecto_cs2tracker.git
 cd flutter_proyecto_cs2tracker
 ```
 
-### 2️⃣ Instalar dependencias
+### 2. Instalar dependencias
 
 ```bash
 flutter pub get
 ```
 
-### 3️⃣ Configurar Firebase
+### 3. Configurar Firebase
 
 1. Ve a [Firebase Console](https://console.firebase.google.com/)
 2. Crea un nuevo proyecto llamado **CS2 Tracker**
@@ -51,7 +51,7 @@ flutter pub get
    - **Realtime Database** (modo test o reglas seguras)
    - **Storage** (para fotos de perfil)
 
-### 4️⃣ Inicializar Firebase en Flutter
+### 4. Inicializar Firebase en Flutter
 
 Asegúrate de tener en `main.dart`:
 
@@ -63,7 +63,7 @@ await Firebase.initializeApp();
 
 ---
 
-## 📦 Dependencias principales (`pubspec.yaml`)
+## Dependencias principales (`pubspec.yaml`)
 
 ```yaml
 dependencies:
@@ -81,7 +81,7 @@ dependencies:
 
 ---
 
-## 🧩 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 lib/
@@ -103,7 +103,7 @@ lib/
 
 ---
 
-## 🧪 Ejecutar la app
+## Ejecutar la app
 
 ```bash
 flutter run
@@ -119,19 +119,19 @@ flutter run
 
 ---
 
-## 📸 Funcionalidades del Drawer
+## Funcionalidades del Drawer
 
 - Muestra la **foto y nombre de usuario**
 - Si no hay foto, permite subir una desde la galería
 - Enlaces a:
-  - 🏠 Inicio
-  - ➕ Añadir partida
-  - 📊 Estadísticas
-  - 🚪 Cerrar sesión
+  - Inicio
+  - Añadir partida
+  - Estadísticas
+  - Cerrar sesión
 
 ---
 
-## 🎨 Mejoras visuales
+## Mejoras visuales
 
 - Interfaz con **Material 3**
 - Paleta de colores basada en **naranja/negro**
@@ -140,7 +140,7 @@ flutter run
 
 ---
 
-## 🧠 Errores comunes
+## ERRORES COMUNES
 
 | Error | Causa | Solución |
 |-------|--------|-----------|
@@ -151,14 +151,6 @@ flutter run
 
 ---
 
-## 👨‍💻 Autor
-
 **Manuel Moreno Parra**  
-Proyecto académico para gestión y análisis de partidas de CS2.  
-Desarrollado con Flutter + Firebase.
 
 ---
-
-## 📄 Licencia
-
-MIT License © 2025 – Libre uso educativo y personal.
