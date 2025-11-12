@@ -9,18 +9,23 @@ import 'pages/stats_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const firebaseConfig = FirebaseOptions(
-    apiKey: "AIzaSyDvSql-lg7hkvNQfH7roXPHA6eGR2W-YD0",
-    authDomain: "autenticacion-1a723.firebaseapp.com",
-    databaseURL: "https://autenticacion-1a723-default-rtdb.firebaseio.com",
-    projectId: "autenticacion-1a723",
-    storageBucket: "autenticacion-1a723.appspot.com",
-    messagingSenderId: "727318054111",
-    appId: "1:727318054111:web:3a0b9dcb6556d90821956a",
-    measurementId: "G-TGQ55VD1YV",
-  );
+  // Inicialización segura de Firebase
+  try {
+    const firebaseConfig = FirebaseOptions(
+      apiKey: "AIzaSyDvSql-lg7hkvNQfH7roXPHA6eGR2W-YD0",
+      authDomain: "autenticacion-1a723.firebaseapp.com",
+      databaseURL: "https://autenticacion-1a723-default-rtdb.firebaseio.com",
+      projectId: "autenticacion-1a723",
+      storageBucket: "autenticacion-1a723.appspot.com",
+      messagingSenderId: "727318054111",
+      appId: "1:727318054111:web:3a0b9dcb6556d90821956a",
+      measurementId: "G-TGQ55VD1YV",
+    );
 
-  await Firebase.initializeApp(options: firebaseConfig);
+    await Firebase.initializeApp(options: firebaseConfig);
+  } catch (e) {
+    debugPrint("Error inicializando Firebase: $e");
+  }
 
   runApp(const MyApp());
 }
@@ -37,19 +42,33 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         brightness: Brightness.dark,
         colorSchemeSeed: Colors.orangeAccent,
+        scaffoldBackgroundColor: Colors.black,
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white70),
+        ),
       ),
+
+      // Control de sesión de usuario (login / home)
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Scaffold(
+              backgroundColor: Colors.black,
+              body: Center(child: CircularProgressIndicator(color: Colors.orangeAccent)),
+            );
           }
+
           if (snapshot.hasData) {
             return const HomePage();
+          } else {
+            return const LoginPage();
           }
-          return const LoginPage();
         },
       ),
+
+      // Rutas de la app
       routes: {
         '/home': (context) => const HomePage(),
         '/add': (context) => const AddMatchPage(),

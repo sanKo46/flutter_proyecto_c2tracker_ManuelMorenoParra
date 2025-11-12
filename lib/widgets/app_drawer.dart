@@ -1,188 +1,109 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import '../services/auth_service.dart';
-import '../pages/admin_page.dart';
 
 class AppDrawer extends StatefulWidget {
-  const AppDrawer({super.key});
+  const AppDrawer({Key? key}) : super(key: key);
 
   @override
-  State<AppDrawer> createState() => _AppDrawerState();
+  _AppDrawerState createState() => _AppDrawerState();
 }
 
 class _AppDrawerState extends State<AppDrawer> {
-  final AuthService _authService = AuthService();
-  final ImagePicker _picker = ImagePicker();
-  Map<String, dynamic>? _userData;
-  bool _loading = true;
+  // 🔹 Cambiamos las rutas a .jpg
+  final List<String> _avatarOptions = [
+    'assets/avatars/avatar1.jpg',
+    'assets/avatars/avatar2.jpg',
+    'assets/avatars/avatar3.jpg',
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
-  Future<void> _loadUserData() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final doc =
-        await FirebaseFirestore.instance.collection('usuarios').doc(user.uid).get();
-
-    setState(() {
-      _userData = doc.data() ?? {};
-      _loading = false;
-    });
-  }
-
-  Future<void> _pickAndUploadImage() async {
-    try {
-      final XFile? pickedFile =
-          await _picker.pickImage(source: ImageSource.gallery);
-
-      if (pickedFile == null) return;
-
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      final file = File(pickedFile.path);
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('profile_images')
-          .child('${user.uid}.jpg');
-
-      // Subir la imagen
-      await storageRef.putFile(file);
-
-      // Obtener URL de descarga
-      final downloadUrl = await storageRef.getDownloadURL();
-
-      // Guardar en Firestore
-      await FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(user.uid)
-          .update({'imageURL': downloadUrl});
-
-      // Actualizar la interfaz
-      setState(() {
-        _userData?['imageURL'] = downloadUrl;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto de perfil actualizada correctamente')),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error subiendo imagen: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al subir la imagen: $e')),
-        );
-      }
-    }
-  }
+  String _selectedAvatar = 'assets/avatars/avatar1.jpg';
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Drawer(
-        backgroundColor: Colors.black,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final username = _userData?['username'] ?? 'Usuario';
-    final imageURL = _userData?['imageURL'] ?? '';
-    final role = _userData?['role'] ?? 'user';
-
     return Drawer(
-      backgroundColor: Colors.black,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            decoration: const BoxDecoration(
-              color: Colors.orangeAccent,
-            ),
+            accountName: const Text('Usuario'),
+            accountEmail: const Text('correo@ejemplo.com'),
             currentAccountPicture: GestureDetector(
-              onTap: _pickAndUploadImage, // 👉 al pulsar, abrir galería
+              onTap: _showAvatarSelector,
               child: CircleAvatar(
-                backgroundColor: Colors.black,
-                backgroundImage:
-                    imageURL.isNotEmpty ? NetworkImage(imageURL) : null,
-                child: imageURL.isEmpty
-                    ? const Icon(Icons.add_a_photo,
-                        color: Colors.orangeAccent, size: 30)
-                    : null,
+                radius: 40,
+                backgroundImage: AssetImage(_selectedAvatar),
+                onBackgroundImageError: (_, __) {}, // Evita error si falta imagen
+                child: Image.asset(
+                  _selectedAvatar,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.person, size: 40, color: Colors.white),
+                ),
               ),
             ),
-            accountName: Text(
-              username,
-              style: const TextStyle(color: Colors.black, fontSize: 18),
-            ),
-            accountEmail: Text(
-              FirebaseAuth.instance.currentUser?.email ?? '',
-              style: const TextStyle(color: Colors.black54),
-            ),
           ),
-
-          // 🏠 Inicio
           ListTile(
-            leading: const Icon(Icons.home, color: Colors.orangeAccent),
+            leading: const Icon(Icons.home),
             title: const Text('Inicio'),
-            onTap: () => Navigator.pushReplacementNamed(context, '/home'),
+            onTap: () {
+              Navigator.pop(context);
+            },
           ),
-
-          // ➕ Agregar Partida
           ListTile(
-            leading:
-                const Icon(Icons.add_circle_outline, color: Colors.orangeAccent),
-            title: const Text('Agregar Partida'),
-            onTap: () => Navigator.pushReplacementNamed(context, '/add'),
-          ),
-
-          // 📊 Estadísticas
-          ListTile(
-            leading: const Icon(Icons.bar_chart, color: Colors.orangeAccent),
-            title: const Text('Estadísticas'),
-            onTap: () => Navigator.pushReplacementNamed(context, '/stats'),
-          ),
-
-          if (role == 'admin') ...[
-            const Divider(color: Colors.orangeAccent),
-            ListTile(
-              leading: const Icon(Icons.admin_panel_settings,
-                  color: Colors.orangeAccent),
-              title: const Text('Panel de Administración'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AdminPanel()),
-                );
-              },
-            ),
-          ],
-
-          const Divider(color: Colors.orangeAccent),
-
-          // 🚪 Cerrar sesión
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.redAccent),
-            title: const Text('Cerrar sesión'),
-            onTap: () async {
-              await _authService.logoutUser();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
+            leading: const Icon(Icons.settings),
+            title: const Text('Configuración'),
+            onTap: () {
+              Navigator.pop(context);
             },
           ),
         ],
       ),
     );
+  }
+
+  // 🔹 Selector de avatar con GridView limitado en tamaño
+  void _showAvatarSelector() async {
+    final selectedAvatar = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Seleccionar avatar'),
+          content: SizedBox(
+            height: 220, // Evita error de "no size"
+            child: GridView.builder(
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: _avatarOptions.length,
+              itemBuilder: (context, index) {
+                final avatar = _avatarOptions[index];
+                return GestureDetector(
+                  onTap: () => Navigator.pop(context, avatar),
+                  child: CircleAvatar(
+                    radius: 35,
+                    backgroundImage: AssetImage(avatar),
+                    onBackgroundImageError: (_, __) {}, // Evita error visual
+                    child: Image.asset(
+                      avatar,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.error, color: Colors.red),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selectedAvatar != null && mounted) {
+      setState(() {
+        _selectedAvatar = selectedAvatar;
+      });
+    }
   }
 }
