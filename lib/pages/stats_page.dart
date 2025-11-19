@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_proyecto_cs2tracker/widgets/app_drawer.dart';
 import '../services/match_service.dart';
+import '../widgets/app_drawer.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -21,7 +20,7 @@ class _StatsPageState extends State<StatsPage> {
       appBar: AppBar(
         title: const Text('Estadísticas'),
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: StreamBuilder<QuerySnapshot>(
         stream: _matchService.getMatches(),
         builder: (context, snapshot) {
@@ -31,18 +30,23 @@ class _StatsPageState extends State<StatsPage> {
           if (snapshot.hasError) {
             return Center(child: Text('Error leyendo partidas: ${snapshot.error}'));
           }
+
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
             return const Center(child: Text('Aún no hay partidas para calcular estadísticas.'));
           }
 
-          // Convertir a lista de mapas y asegurarnos de tipos
+          // Convertir los datos
           final matches = docs.map((d) {
             final data = d.data() as Map<String, dynamic>;
             return <String, dynamic>{
               'map': data['map'],
-              'kills': (data['kills'] is int) ? data['kills'] : int.tryParse('${data['kills']}') ?? 0,
-              'deaths': (data['deaths'] is int) ? data['deaths'] : int.tryParse('${data['deaths']}') ?? 0,
+              'kills': (data['kills'] is int)
+                  ? data['kills']
+                  : int.tryParse('${data['kills']}') ?? 0,
+              'deaths': (data['deaths'] is int)
+                  ? data['deaths']
+                  : int.tryParse('${data['deaths']}') ?? 0,
               'score': data['score'] ?? '',
               'createdAt': data['createdAt'],
             };
@@ -56,7 +60,7 @@ class _StatsPageState extends State<StatsPage> {
           final avgKills = totalMatches == 0 ? 0.0 : totalKills / totalMatches;
           final avgDeaths = totalMatches == 0 ? 0.0 : totalDeaths / totalMatches;
 
-          // Determinar victorias por parsing simple del campo 'score' (ej: "16-10" o "13 - 10")
+          // Calcular winrate
           int wins = 0;
           for (final m in matches) {
             final score = (m['score'] ?? '').toString();
@@ -67,9 +71,10 @@ class _StatsPageState extends State<StatsPage> {
               if (myScore > oppScore) wins++;
             }
           }
-          final winrate = totalMatches == 0 ? 0.0 : (wins / totalMatches) * 100.0;
+          final winrate =
+              totalMatches == 0 ? 0.0 : (wins / totalMatches) * 100.0;
 
-          // Para el gráfico: usar kills por orden cronológico (por createdAt si existe)
+          // Ordenar por fecha
           matches.sort((a, b) {
             final ta = a['createdAt'];
             final tb = b['createdAt'];
@@ -80,6 +85,9 @@ class _StatsPageState extends State<StatsPage> {
           });
 
           final killsList = matches.map<int>((m) => m['kills'] as int).toList();
+          final maxKills = killsList.isEmpty
+              ? 0
+              : killsList.reduce((a, b) => a > b ? a : b).toInt();
 
           return Padding(
             padding: const EdgeInsets.all(12.0),
@@ -107,7 +115,7 @@ class _StatsPageState extends State<StatsPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Gráfico de barras con kills por partida
+                // Gráfico
                 Expanded(
                   child: Card(
                     color: Colors.grey[900],
@@ -123,10 +131,11 @@ class _StatsPageState extends State<StatsPage> {
                                 : BarChart(
                                     BarChartData(
                                       alignment: BarChartAlignment.spaceAround,
-                                      maxY: (killsList.reduce((a, b) => a > b ? a : b) + 5).toDouble(),
+                                      maxY: (maxKills + 5).toDouble(),
                                       titlesData: FlTitlesData(
                                         leftTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: true),
+                                          sideTitles:
+                                              SideTitles(showTitles: true),
                                         ),
                                         bottomTitles: AxisTitles(
                                           sideTitles: SideTitles(
@@ -134,10 +143,16 @@ class _StatsPageState extends State<StatsPage> {
                                             reservedSize: 30,
                                             getTitlesWidget: (value, meta) {
                                               final idx = value.toInt();
-                                              if (idx < 0 || idx >= killsList.length) return const SizedBox();
+                                              if (idx < 0 ||
+                                                  idx >= killsList.length) {
+                                                return const SizedBox();
+                                              }
                                               return SideTitleWidget(
-                                                axisSide: meta.axisSide,
-                                                child: Text('${idx + 1}', style: const TextStyle(fontSize: 10)),
+                                                meta: meta,
+                                                child: Text(
+                                                  '${idx + 1}',
+                                                  style: const TextStyle(fontSize: 10),
+                                                ),
                                               );
                                             },
                                           ),
@@ -145,14 +160,16 @@ class _StatsPageState extends State<StatsPage> {
                                       ),
                                       gridData: FlGridData(show: true),
                                       borderData: FlBorderData(show: false),
-                                      barGroups: List.generate(killsList.length, (i) {
+                                      barGroups: List.generate(killsList.length,
+                                          (i) {
                                         return BarChartGroupData(
                                           x: i,
                                           barRods: [
                                             BarChartRodData(
                                               toY: killsList[i].toDouble(),
                                               width: 14,
-                                              borderRadius: BorderRadius.circular(4),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
                                             )
                                           ],
                                         );
@@ -173,7 +190,6 @@ class _StatsPageState extends State<StatsPage> {
     );
   }
 
-  // Helper widget para las cards pequeñas
   Widget _statCard(String title, String value) {
     return Expanded(
       child: Card(
@@ -182,9 +198,12 @@ class _StatsPageState extends State<StatsPage> {
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           child: Column(
             children: [
-              Text(title, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+              Text(title,
+                  style: const TextStyle(fontSize: 12, color: Colors.white70)),
               const SizedBox(height: 6),
-              Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(value,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -192,8 +211,6 @@ class _StatsPageState extends State<StatsPage> {
     );
   }
 
-  /// Parseo simple de score "16-10" -> [16, 10]
-  /// Devuelve null si no puede parsear.
   List<int>? _parseScore(String score) {
     final cleaned = score.replaceAll(' ', '');
     if (cleaned.isEmpty || !cleaned.contains('-')) return null;
