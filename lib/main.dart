@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'pages/login_page.dart';
 import 'pages/home_page.dart';
 import 'pages/add_match_page.dart';
 import 'pages/stats_page.dart';
+import 'pages/admin_panel.dart'; //
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,20 +45,16 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         colorSchemeSeed: Colors.orangeAccent,
         scaffoldBackgroundColor: Colors.black,
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.white),
-          bodyMedium: TextStyle(color: Colors.white70),
-        ),
       ),
 
-      // Control de sesión de usuario (login / home)
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               backgroundColor: Colors.black,
-              body: Center(child: CircularProgressIndicator(color: Colors.orangeAccent)),
+              body: Center(
+                  child: CircularProgressIndicator(color: Colors.orangeAccent)),
             );
           }
 
@@ -68,12 +66,13 @@ class MyApp extends StatelessWidget {
         },
       ),
 
-      // Rutas de la app
+      // Rutas registradas correctamente
       routes: {
         '/home': (context) => const HomePage(),
         '/add': (context) => const AddMatchPage(),
         '/stats': (context) => const StatsPage(),
         '/login': (context) => const LoginPage(),
+        '/adminpanel': (context) => const AdminPanel(),
       },
     );
   }

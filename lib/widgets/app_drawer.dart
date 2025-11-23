@@ -17,7 +17,7 @@ class _AppDrawerState extends State<AppDrawer> {
   String username = "";
   String email = "";
   String avatar = "assets/avatars/avatar1.jpg";
-  String role = "user"; // 👈 DEFAULT
+  String role = "user"; // DEFAULT
   bool loading = true;
 
   @override
@@ -38,8 +38,10 @@ class _AppDrawerState extends State<AppDrawer> {
       setState(() {
         username = data["username"];
         email = data["email"];
-        avatar = data["avatar"] ?? "assets/avatars/avatar1.jpg";
-        role = data["role"] ?? "user"; // 👈 CARGA EL ROL
+        avatar = data["imageURL"] == "" 
+            ? "assets/avatars/avatar1.jpg"
+            : data["imageURL"];        
+        role = data["role"] ?? "user"; // CARGA EL ROL
         loading = false;
       });
     }
@@ -107,7 +109,7 @@ class _AppDrawerState extends State<AppDrawer> {
                   },
                 ),
 
-                // ⚠️ SOLO SI ES ADMIN
+                // SOLO SI ES ADMIN
                 if (role == "admin") ...[
                   const Divider(color: Colors.white30),
                   ListTile(

@@ -18,14 +18,15 @@ class AuthService {
         await _firestore.collection('usuarios').doc(user.uid).set({
           'username': username,
           'email': email,
-          'role': 'user',
-          'imageURL': '',
+          'role': 'user',                       // por defecto
+          'avatar': 'assets/avatars/avatar1.jpg', // avatar por defecto
+          'banned': false,                      // necesario para adminPanel
         });
       }
       return user;
     } catch (e) {
       print('Error al registrar: $e');
-      return null;
+      rethrow;
     }
   }
 
@@ -39,7 +40,7 @@ class AuthService {
       return userCredential.user;
     } catch (e) {
       print('Error al iniciar sesión: $e');
-      return null;
+      rethrow;
     }
   }
 
