@@ -1,7 +1,7 @@
 # CS2 Match Tracker
 
-Aplicación Flutter para registrar y analizar tus partidas de **Counter-Strike 2 (CS2)**.  
-Permite crear una cuenta, iniciar sesión, añadir partidas con sus estadísticas, ver tus medias y gestionar tu perfil (incluyendo foto de perfil).
+Aplicación Flutter para registrar y analizar tus partidas de **Counter-Strike 2 (CS2)**  
+Permite crear una cuenta, iniciar sesión, añadir partidas con sus estadísticas, ver tus medias y gestionar tu perfil.
 
 ---
 
@@ -96,8 +96,12 @@ lib/
 │   ├── home_page.dart             # Pantalla principal (lista de partidas)
 │   ├── add_match_page.dart        # Añadir partida nueva
 │   ├── stats_page.dart            # Estadísticas del usuario
+│   ├── admin_page.dart            # Panel de administrador que se encuentra en el appdrawer al tener rol de administrador
+│   └── settings_page.dart         # Pantalla de configuracion del usuario donde puede reguistrar el numero de telefono
+│   
 │
 └── widgets/
+    ├── match_card.dart            # Cards donde crean las partidas
     └── app_drawer.dart            # Drawer lateral con foto y navegación
 ```
 
