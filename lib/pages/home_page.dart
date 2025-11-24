@@ -14,22 +14,27 @@ class _HomePageState extends State<HomePage> {
   final MatchService _matchService = MatchService();
 
   // FILTROS
-  String _selectedResult = 'Todos';
-  String _sortOrder = 'Más recientes';
+  String _selectedResult = 'Todos';   // Filtro de victorias/derrotas
+  String _sortOrder = 'Más recientes'; // Ordenación por fecha o kills
 
+  // ELIMINAR PARTIDA
   Future<void> _deleteMatch(String id) async {
     await FirebaseFirestore.instance.collection('matches').doc(id).delete();
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Partida eliminada')),
     );
   }
 
+  // EDITAR PARTIDA
   Future<void> _editMatch(String id, Map<String, dynamic> match) async {
+    // Controladores para editar datos existentes
     final mapController = TextEditingController(text: match['map']);
     final scoreController = TextEditingController(text: match['score']);
     final killsController = TextEditingController(text: match['kills'].toString());
     final deathsController = TextEditingController(text: match['deaths'].toString());
 
+    // Muestra una ventana emergente para editar la partida
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -44,9 +49,13 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
           ElevatedButton(
             onPressed: () async {
+              // Guardar cambios en Firebase
               await FirebaseFirestore.instance.collection('matches').doc(id).update({
                 'map': mapController.text,
                 'score': scoreController.text,
@@ -62,16 +71,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // INTERFAZ PRINCIPAL
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // AppBar con filtros
       appBar: AppBar(
         title: const Text('CS2 Match Tracker'),
         actions: [
-          // FILTRO RESULTADO
+          // FILTRO POR RESULTADO
           DropdownButton<String>(
             value: _selectedResult,
-            underline: const SizedBox(),
+            underline: const SizedBox(), // Quita línea fea
             items: const [
               DropdownMenuItem(value: 'Todos', child: Text('Todos')),
               DropdownMenuItem(value: 'Victoria', child: Text('Victorias')),
@@ -80,7 +91,7 @@ class _HomePageState extends State<HomePage> {
             onChanged: (v) => setState(() => _selectedResult = v!),
           ),
 
-          // ORDENACIÓN
+          // ORDENACIÓN DE PARTIDAS
           DropdownButton<String>(
             value: _sortOrder,
             underline: const SizedBox(),
@@ -94,14 +105,20 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+
+      // Drawer lateral
       drawer: const AppDrawer(),
+
+      // Botón flotante para añadir partida
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.orangeAccent,
         onPressed: () => Navigator.pushNamed(context, '/add'),
         child: const Icon(Icons.add),
       ),
+
+      // LISTA DE PARTIDAS
       body: StreamBuilder<QuerySnapshot>(
-        stream: _matchService.getMatches(),
+        stream: _matchService.getMatches(), // Obtiene partidas del usuario
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -110,14 +127,14 @@ class _HomePageState extends State<HomePage> {
             return const Center(child: Text('No hay partidas registradas.'));
           }
 
-          // Convertimos los datos
+          // Lista original de documentos de Firebase
           List<QueryDocumentSnapshot> matches = snapshot.data!.docs;
 
-          // APLICAR FILTRO
+          // APLICAR FILTRO DE RESULTADO
           if (_selectedResult != 'Todos') {
             matches = matches.where((doc) {
               final score = (doc['score'] ?? '').toString();
-              return score == _selectedResult;
+              return score == _selectedResult; // Filtra por texto exacto
             }).toList();
           }
 
@@ -129,17 +146,22 @@ class _HomePageState extends State<HomePage> {
             switch (_sortOrder) {
               case 'Más recientes':
                 return b['createdAt'].compareTo(a['createdAt']);
+
               case 'Más antiguas':
                 return a['createdAt'].compareTo(b['createdAt']);
+
               case 'Más kills':
                 return bKills.compareTo(aKills);
+
               case 'Menos kills':
                 return aKills.compareTo(bKills);
+
               default:
                 return 0;
             }
           });
 
+          // LISTA FINAL DE PARTIDAS
           return ListView.builder(
             itemCount: matches.length,
             itemBuilder: (context, index) {
@@ -149,14 +171,21 @@ class _HomePageState extends State<HomePage> {
               return Card(
                 color: Colors.grey[900],
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+
                 child: ListTile(
                   leading: const Icon(Icons.sports_esports, color: Colors.orangeAccent),
+
+                  // Título del ítem
                   title: Text(match['map'] ?? 'Desconocido'),
+
+                  // Datos de la partida
                   subtitle: Text(
                     'Score: ${match['score']} | '
                     'Kills: ${match['kills']} | '
                     'Deaths: ${match['deaths']}',
                   ),
+
+                  // Menú de edición/borrado
                   trailing: PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.orangeAccent),
                     onSelected: (value) {

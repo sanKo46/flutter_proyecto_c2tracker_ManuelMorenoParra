@@ -2,6 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+/// Página de configuración.
+/// Permite al usuario ver su perfil, cambiar el número de teléfono
+/// y enviar mensajes de contacto o reporte.
+/// Todos los datos se leen y actualizan desde Firestore.
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -10,28 +14,33 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  /// Instancias de Firebase.
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
+  /// Controladores para los campos editables.
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
 
+  /// Datos del usuario obtenidos desde Firestore.
   String username = "";
   String email = "";
   String avatar = "assets/avatars/avatar1.jpg";
 
+  /// Indica si aún se están cargando los datos.
   bool loading = true;
 
+  /// Se ejecuta al entrar a la página, obtiene los datos del usuario.
   @override
   void initState() {
     super.initState();
     _loadUserData();
   }
 
+  /// Obtiene la información del usuario desde Firestore.
   Future<void> _loadUserData() async {
     final uid = _auth.currentUser!.uid;
     final doc = await _firestore.collection("usuarios").doc(uid).get();
-
     final data = doc.data()!;
 
     setState(() {
@@ -43,6 +52,7 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  /// Guarda el número de teléfono actualizado en Firestore.
   Future<void> _savePhone() async {
     final uid = _auth.currentUser!.uid;
 
@@ -55,6 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  /// Envía un mensaje de contacto o reporte a Firestore.
   Future<void> _sendContactMessage() async {
     final uid = _auth.currentUser!.uid;
 
@@ -72,6 +83,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  /// Interfaz principal de la página.
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -87,10 +99,13 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: Colors.orangeAccent,
       ),
       backgroundColor: Colors.black,
+
+      /// Contenedor general scrollable.
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            /// Tarjeta que muestra la información del usuario.
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -104,6 +119,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   )
                 ],
               ),
+
               child: Column(
                 children: [
                   CircleAvatar(
@@ -111,18 +127,22 @@ class _SettingsPageState extends State<SettingsPage> {
                     backgroundImage: AssetImage(avatar),
                   ),
                   const SizedBox(height: 15),
+
                   Text(
                     username,
                     style: const TextStyle(fontSize: 22, color: Colors.white),
                   ),
+
                   const SizedBox(height: 5),
+
                   Text(
                     email,
                     style: const TextStyle(fontSize: 16, color: Colors.white70),
                   ),
+
                   const SizedBox(height: 20),
 
-                  // 📱 PHONE TEXTFIELD
+                  /// Campo editable para añadir o modificar teléfono.
                   TextField(
                     controller: _phoneController,
                     style: const TextStyle(color: Colors.white),
@@ -141,6 +161,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                   const SizedBox(height: 10),
 
+                  /// Guarda el número en Firestore.
                   ElevatedButton(
                     onPressed: _savePhone,
                     style: ElevatedButton.styleFrom(
@@ -155,7 +176,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 25),
 
-            // 🔶 CONTACT SECTION
+            /// Tarjeta para enviar mensajes o reportes.
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -169,6 +190,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   )
                 ],
               ),
+
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -180,8 +202,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 15),
 
+                  /// Campo para escribir el mensaje.
                   TextField(
                     controller: _contactController,
                     maxLines: 5,
@@ -200,6 +224,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                   const SizedBox(height: 15),
 
+                  /// Envía el mensaje a Firestore.
                   ElevatedButton(
                     onPressed: _sendContactMessage,
                     style: ElevatedButton.styleFrom(

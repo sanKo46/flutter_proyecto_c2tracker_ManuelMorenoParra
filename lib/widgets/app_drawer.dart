@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../pages/settings_page.dart';
 
+/// Menú lateral (Drawer) que muestra información del usuario,
+/// navegación entre pantallas y acceso al panel admin si tiene rol "admin".
 class AppDrawer extends StatefulWidget {
   const AppDrawer({Key? key}) : super(key: key);
 
@@ -11,13 +13,17 @@ class AppDrawer extends StatefulWidget {
 }
 
 class _AppDrawerState extends State<AppDrawer> {
+  /// Instancias de Firebase
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
 
+  /// Datos del usuario cargados desde Firestore
   String username = "";
   String email = "";
   String avatar = "assets/avatars/avatar1.jpg";
   String role = "user";
+
+  /// Indica si la información sigue cargando
   bool loading = true;
 
   @override
@@ -26,18 +32,19 @@ class _AppDrawerState extends State<AppDrawer> {
     _loadUserInfo();
   }
 
+  /// Obtiene la información del usuario desde Firestore.
+  /// También evita errores si el documento no existe.
   Future<void> _loadUserInfo() async {
     final user = _auth.currentUser;
+
     if (user == null) {
       setState(() => loading = false);
       return;
     }
 
-    final doc =
-        await _firestore.collection("usuarios").doc(user.uid).get();
+    final doc = await _firestore.collection("usuarios").doc(user.uid).get();
 
     if (!doc.exists) {
-      // Evita loading infinito si el documento no existe
       setState(() {
         username = "Usuario";
         email = user.email ?? "";
@@ -59,15 +66,23 @@ class _AppDrawerState extends State<AppDrawer> {
     });
   }
 
+  /// Construcción visual del Drawer.
   @override
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: Colors.black,
+
+      /// Pantalla de carga
       child: loading
-          ? const Center(child: CircularProgressIndicator(color: Colors.orangeAccent))
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.orangeAccent),
+            )
+
+          /// Lista principal del menú
           : ListView(
               padding: EdgeInsets.zero,
               children: [
+                /// Encabezado con información del usuario
                 UserAccountsDrawerHeader(
                   decoration: const BoxDecoration(
                     color: Colors.orangeAccent,
@@ -86,37 +101,40 @@ class _AppDrawerState extends State<AppDrawer> {
                   ),
                 ),
 
-                // HOME
+                /// Botón para ir a Home
                 ListTile(
                   leading: const Icon(Icons.home, color: Colors.white),
-                  title: const Text("Inicio", style: TextStyle(color: Colors.white)),
+                  title: const Text("Inicio",
+                      style: TextStyle(color: Colors.white)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushReplacementNamed(context, "/home");
                   },
                 ),
 
-                // ADD MATCH
+                /// Botón para agregar partidas
                 ListTile(
                   leading: const Icon(Icons.add_circle, color: Colors.white),
-                  title: const Text("Agregar Partida", style: TextStyle(color: Colors.white)),
+                  title: const Text("Agregar Partida",
+                      style: TextStyle(color: Colors.white)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, "/add");
                   },
                 ),
 
-                // STATS
+                /// Botón para estadísticas
                 ListTile(
                   leading: const Icon(Icons.bar_chart, color: Colors.white),
-                  title: const Text("Estadísticas", style: TextStyle(color: Colors.white)),
+                  title: const Text("Estadísticas",
+                      style: TextStyle(color: Colors.white)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, "/stats");
                   },
                 ),
 
-                // ADMIN ONLY
+                /// Opción solo visible si el usuario es administrador
                 if (role == "admin") ...[
                   const Divider(color: Colors.white30),
                   ListTile(
@@ -133,29 +151,33 @@ class _AppDrawerState extends State<AppDrawer> {
 
                 const Divider(color: Colors.white30),
 
-                // SETTINGS
+                /// Botón para ir a configuración
                 ListTile(
                   leading: const Icon(Icons.settings, color: Colors.white),
-                  title: const Text("Configuración", style: TextStyle(color: Colors.white)),
+                  title: const Text("Configuración",
+                      style: TextStyle(color: Colors.white)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const SettingsPage()),
+                      MaterialPageRoute(
+                        builder: (_) => const SettingsPage(),
+                      ),
                     );
                   },
                 ),
 
                 const Divider(color: Colors.white30),
 
-                // LOGOUT
+                /// Botón para cerrar sesión
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.redAccent),
-                  title: const Text("Cerrar sesión", style: TextStyle(color: Colors.redAccent)),
+                  title: const Text("Cerrar sesión",
+                      style: TextStyle(color: Colors.redAccent)),
                   onTap: () async {
                     await _auth.signOut();
                     Navigator.pushNamedAndRemoveUntil(
-                      context, "/login", (_) => false);
+                        context, "/login", (_) => false);
                   },
                 ),
               ],

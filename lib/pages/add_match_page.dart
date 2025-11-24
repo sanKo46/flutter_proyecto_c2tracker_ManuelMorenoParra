@@ -12,16 +12,16 @@ class AddMatchPage extends StatefulWidget {
 class _AddMatchPageState extends State<AddMatchPage> {
   final MatchService _matchService = MatchService();
 
-  // Controladores
+  // Controladores para kills y deaths
   final TextEditingController _killsController = TextEditingController();
   final TextEditingController _deathsController = TextEditingController();
 
-  // Campos de selección
+  // Campos seleccionados por el usuario
   String? _selectedMap;
   String? _selectedMode;
   String? _selectedScore;
 
-  // Listas de opciones
+  // Listas desplegables
   final List<String> _maps = [
     'Mirage',
     'Inferno',
@@ -45,8 +45,9 @@ class _AddMatchPageState extends State<AddMatchPage> {
     'Derrota'
   ];
 
+  // Guardar partida
   Future<void> _saveMatch() async {
-    // Validación simple
+    // Validación
     if (_selectedMap == null || _selectedMode == null || _selectedScore == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, completa todos los campos')),
@@ -54,16 +55,19 @@ class _AddMatchPageState extends State<AddMatchPage> {
       return;
     }
 
+    // Llamada al servicio
     await _matchService.addMatch({
       'map': _selectedMap,
       'mode': _selectedMode,
       'score': _selectedScore,
       'kills': int.tryParse(_killsController.text) ?? 0,
       'deaths': int.tryParse(_deathsController.text) ?? 0,
+      'createdAt': DateTime.now(), // IMPORTANTE PARA ORDENAR
     });
 
+    // Volver a Home
     if (mounted) {
-      Navigator.pop(context); // 👈 Regresa sin dejar pantalla en blanco
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Partida guardada correctamente')),
       );
@@ -74,11 +78,15 @@ class _AddMatchPageState extends State<AddMatchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Agregar partida')),
-      drawer: AppDrawer(),
+
+      // Drawer lateral
+      drawer: const AppDrawer(),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
+            // Selección de mapa
             DropdownButtonFormField<String>(
               value: _selectedMap,
               decoration: const InputDecoration(labelText: 'Mapa'),
@@ -87,7 +95,10 @@ class _AddMatchPageState extends State<AddMatchPage> {
               }).toList(),
               onChanged: (value) => setState(() => _selectedMap = value),
             ),
+
             const SizedBox(height: 12),
+
+            // Selección de modo
             DropdownButtonFormField<String>(
               value: _selectedMode,
               decoration: const InputDecoration(labelText: 'Modalidad'),
@@ -96,7 +107,10 @@ class _AddMatchPageState extends State<AddMatchPage> {
               }).toList(),
               onChanged: (value) => setState(() => _selectedMode = value),
             ),
+
             const SizedBox(height: 12),
+
+            // Selección de resultado
             DropdownButtonFormField<String>(
               value: _selectedScore,
               decoration: const InputDecoration(labelText: 'Marcador'),
@@ -105,23 +119,31 @@ class _AddMatchPageState extends State<AddMatchPage> {
               }).toList(),
               onChanged: (value) => setState(() => _selectedScore = value),
             ),
+
             const SizedBox(height: 12),
+
+            // Kills
             TextField(
               controller: _killsController,
               decoration: const InputDecoration(labelText: 'Kills'),
               keyboardType: TextInputType.number,
             ),
+
+            // Deaths
             TextField(
               controller: _deathsController,
               decoration: const InputDecoration(labelText: 'Deaths'),
               keyboardType: TextInputType.number,
             ),
+
             const SizedBox(height: 20),
+
+            // Botón guardar
             ElevatedButton(
               onPressed: _saveMatch,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromARGB(255, 255, 173, 65),
-                foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+                foregroundColor: Colors.black,
               ),
               child: const Text('Guardar'),
             ),
