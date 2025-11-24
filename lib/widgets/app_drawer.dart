@@ -17,7 +17,7 @@ class _AppDrawerState extends State<AppDrawer> {
   String username = "";
   String email = "";
   String avatar = "assets/avatars/avatar1.jpg";
-  String role = "user"; // DEFAULT
+  String role = "user";
   bool loading = true;
 
   @override
@@ -28,23 +28,35 @@ class _AppDrawerState extends State<AppDrawer> {
 
   Future<void> _loadUserInfo() async {
     final user = _auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      setState(() => loading = false);
+      return;
+    }
 
     final doc =
         await _firestore.collection("usuarios").doc(user.uid).get();
 
-    if (doc.exists) {
-      final data = doc.data()!;
+    if (!doc.exists) {
+      // Evita loading infinito si el documento no existe
       setState(() {
-        username = data["username"];
-        email = data["email"];
-        avatar = data["imageURL"] == "" 
-            ? "assets/avatars/avatar1.jpg"
-            : data["imageURL"];        
-        role = data["role"] ?? "user"; // CARGA EL ROL
+        username = "Usuario";
+        email = user.email ?? "";
         loading = false;
       });
+      return;
     }
+
+    final data = doc.data()!;
+
+    setState(() {
+      username = data["username"] ?? "Usuario";
+      email = data["email"] ?? user.email ?? "";
+      avatar = (data["imageURL"] == null || data["imageURL"].isEmpty)
+          ? "assets/avatars/avatar1.jpg"
+          : data["imageURL"];
+      role = data["role"] ?? "user";
+      loading = false;
+    });
   }
 
   @override
@@ -52,7 +64,7 @@ class _AppDrawerState extends State<AppDrawer> {
     return Drawer(
       backgroundColor: Colors.black,
       child: loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.orangeAccent))
           : ListView(
               padding: EdgeInsets.zero,
               children: [
@@ -77,8 +89,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 // HOME
                 ListTile(
                   leading: const Icon(Icons.home, color: Colors.white),
-                  title: const Text("Inicio",
-                      style: TextStyle(color: Colors.white)),
+                  title: const Text("Inicio", style: TextStyle(color: Colors.white)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushReplacementNamed(context, "/home");
@@ -87,10 +98,8 @@ class _AppDrawerState extends State<AppDrawer> {
 
                 // ADD MATCH
                 ListTile(
-                  leading:
-                      const Icon(Icons.add_circle, color: Colors.white),
-                  title: const Text("Agregar Partida",
-                      style: TextStyle(color: Colors.white)),
+                  leading: const Icon(Icons.add_circle, color: Colors.white),
+                  title: const Text("Agregar Partida", style: TextStyle(color: Colors.white)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, "/add");
@@ -99,17 +108,15 @@ class _AppDrawerState extends State<AppDrawer> {
 
                 // STATS
                 ListTile(
-                  leading:
-                      const Icon(Icons.bar_chart, color: Colors.white),
-                  title: const Text("Estadísticas",
-                      style: TextStyle(color: Colors.white)),
+                  leading: const Icon(Icons.bar_chart, color: Colors.white),
+                  title: const Text("Estadísticas", style: TextStyle(color: Colors.white)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.pushNamed(context, "/stats");
                   },
                 ),
 
-                // SOLO SI ES ADMIN
+                // ADMIN ONLY
                 if (role == "admin") ...[
                   const Divider(color: Colors.white30),
                   ListTile(
@@ -129,14 +136,13 @@ class _AppDrawerState extends State<AppDrawer> {
                 // SETTINGS
                 ListTile(
                   leading: const Icon(Icons.settings, color: Colors.white),
-                  title: const Text("Configuración",
-                      style: TextStyle(color: Colors.white)),
+                  title: const Text("Configuración", style: TextStyle(color: Colors.white)),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const SettingsPage()));
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsPage()),
+                    );
                   },
                 ),
 
@@ -145,12 +151,11 @@ class _AppDrawerState extends State<AppDrawer> {
                 // LOGOUT
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.redAccent),
-                  title: const Text("Cerrar sesión",
-                      style: TextStyle(color: Colors.redAccent)),
+                  title: const Text("Cerrar sesión", style: TextStyle(color: Colors.redAccent)),
                   onTap: () async {
                     await _auth.signOut();
                     Navigator.pushNamedAndRemoveUntil(
-                        context, "/login", (_) => false);
+                      context, "/login", (_) => false);
                   },
                 ),
               ],

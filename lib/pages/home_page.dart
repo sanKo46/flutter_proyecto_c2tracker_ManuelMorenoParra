@@ -13,6 +13,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final MatchService _matchService = MatchService();
 
+  // FILTROS
+  String _selectedResult = 'Todos';
+  String _sortOrder = 'Más recientes';
+
   Future<void> _deleteMatch(String id) async {
     await FirebaseFirestore.instance.collection('matches').doc(id).delete();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -40,10 +44,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           ElevatedButton(
             onPressed: () async {
               await FirebaseFirestore.instance.collection('matches').doc(id).update({
@@ -64,7 +65,35 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('CS2 Match Tracker')),
+      appBar: AppBar(
+        title: const Text('CS2 Match Tracker'),
+        actions: [
+          // FILTRO RESULTADO
+          DropdownButton<String>(
+            value: _selectedResult,
+            underline: const SizedBox(),
+            items: const [
+              DropdownMenuItem(value: 'Todos', child: Text('Todos')),
+              DropdownMenuItem(value: 'Victoria', child: Text('Victorias')),
+              DropdownMenuItem(value: 'Derrota', child: Text('Derrotas')),
+            ],
+            onChanged: (v) => setState(() => _selectedResult = v!),
+          ),
+
+          // ORDENACIÓN
+          DropdownButton<String>(
+            value: _sortOrder,
+            underline: const SizedBox(),
+            items: const [
+              DropdownMenuItem(value: 'Más recientes', child: Text('Más recientes')),
+              DropdownMenuItem(value: 'Más antiguas', child: Text('Más antiguas')),
+              DropdownMenuItem(value: 'Más kills', child: Text('Más kills')),
+              DropdownMenuItem(value: 'Menos kills', child: Text('Menos kills')),
+            ],
+            onChanged: (v) => setState(() => _sortOrder = v!),
+          ),
+        ],
+      ),
       drawer: const AppDrawer(),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.orangeAccent,
@@ -81,13 +110,42 @@ class _HomePageState extends State<HomePage> {
             return const Center(child: Text('No hay partidas registradas.'));
           }
 
-          final matches = snapshot.data!.docs;
+          // Convertimos los datos
+          List<QueryDocumentSnapshot> matches = snapshot.data!.docs;
+
+          // APLICAR FILTRO
+          if (_selectedResult != 'Todos') {
+            matches = matches.where((doc) {
+              final score = (doc['score'] ?? '').toString();
+              return score == _selectedResult;
+            }).toList();
+          }
+
+          // APLICAR ORDENACIÓN
+          matches.sort((a, b) {
+            final aKills = a['kills'] ?? 0;
+            final bKills = b['kills'] ?? 0;
+
+            switch (_sortOrder) {
+              case 'Más recientes':
+                return b['createdAt'].compareTo(a['createdAt']);
+              case 'Más antiguas':
+                return a['createdAt'].compareTo(b['createdAt']);
+              case 'Más kills':
+                return bKills.compareTo(aKills);
+              case 'Menos kills':
+                return aKills.compareTo(bKills);
+              default:
+                return 0;
+            }
+          });
 
           return ListView.builder(
             itemCount: matches.length,
             itemBuilder: (context, index) {
               final doc = matches[index];
               final match = doc.data() as Map<String, dynamic>;
+
               return Card(
                 color: Colors.grey[900],
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -95,9 +153,9 @@ class _HomePageState extends State<HomePage> {
                   leading: const Icon(Icons.sports_esports, color: Colors.orangeAccent),
                   title: Text(match['map'] ?? 'Desconocido'),
                   subtitle: Text(
-                    'Score: ${match['score'] ?? 'N/A'} | '
-                    'Kills: ${match['kills'] ?? 0} | '
-                    'Deaths: ${match['deaths'] ?? 0}',
+                    'Score: ${match['score']} | '
+                    'Kills: ${match['kills']} | '
+                    'Deaths: ${match['deaths']}',
                   ),
                   trailing: PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.orangeAccent),
@@ -105,9 +163,9 @@ class _HomePageState extends State<HomePage> {
                       if (value == 'edit') _editMatch(doc.id, match);
                       if (value == 'delete') _deleteMatch(doc.id);
                     },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'edit', child: Text('Editar')),
-                      const PopupMenuItem(value: 'delete', child: Text('Eliminar')),
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'edit', child: Text('Editar')),
+                      PopupMenuItem(value: 'delete', child: Text('Eliminar')),
                     ],
                   ),
                 ),
